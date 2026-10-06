@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Caminhos da Memória — Vargem Alta (ES)</title>
+  <meta name="description" content="Jogo educativo em 3D e realidade virtual sobre os povos e caminhos que formaram Vargem Alta, Espírito Santo: Puri, quilombolas de Pedra Branca, imigrantes italianos e libaneses." />
+  <meta name="theme-color" content="#120d09" />
+  <meta property="og:title" content="Caminhos da Memória — Vargem Alta (ES)" />
+  <meta property="og:description" content="Quatro histórias. Um mesmo chão. Um jogo 3D/VR sobre a formação de Vargem Alta." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23120d09'/%3E%3Cpath d='M10 44c10-14 18-4 24-16s16-12 20-10' stroke='%23e3b964' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='46' cy='18' r='5' fill='%23e3b964'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div id="app"></div>
+  <div id="ui">
+    <div id="letterbox"><i></i><i></i></div>
+
+    <section id="loading" class="screen show">
+      <div class="loader">
+        <div class="emblem"><svg viewBox="0 0 64 64"><path d="M8 46c10-14 18-4 24-16s16-12 22-10" /><circle cx="47" cy="17" r="5" /></svg></div>
+        <div class="load-title">Caminhos da Memória</div>
+        <div class="bar"><span id="load-bar"></span></div>
+        <div class="load-msg" id="load-msg">Preparando o vale…</div>
+      </div>
+    </section>
+
+    <section id="title" class="screen">
+      <div class="title-wrap">
+        <div class="kicker">Vargem Alta · Espírito Santo</div>
+        <h1><span class="l1">Caminhos</span><span class="l2">da Memória</span></h1>
+        <p class="tagline">Quatro histórias. Um mesmo chão.</p>
+        <div id="press" class="press">Clique, toque ou pressione qualquer tecla</div>
+        <nav id="main-menu" class="menu">
+          <button data-act="journey" class="primary">Iniciar Jornada</button>
+          <button data-act="chapters">Capítulos</button>
+          <button data-act="archive">Acervo Histórico</button>
+          <button data-act="credits">Fontes e Créditos</button>
+          <button data-act="vr" id="btn-vr" class="vr hidden">Entrar em Realidade Virtual</button>
+        </nav>
+      </div>
+      <div class="title-foot">Experiência educativa · Personagens ficcionais inspirados em pesquisa histórica</div>
+      <button class="icon-btn settings-btn" data-act="settings" title="Configurações" aria-label="Configurações">⚙</button>
+    </section>
+
+    <section id="chapters" class="screen">
+      <header class="scr-head"><h2>Escolha um caminho</h2><p>Cada capítulo leva poucos minutos. Jogue na ordem que quiser.</p></header>
+      <div id="chapter-cards" class="cards"></div>
+      <div class="scr-foot"><button data-act="epilogo" class="ghost">Epílogo · Vargem Alta hoje</button><button class="back" data-act="back">← Voltar</button></div>
+    </section>
+
+    <section id="archive" class="screen">
+      <header class="scr-head"><h2>Acervo Histórico</h2><p>Os registros da pesquisa que fundamenta o jogo. ★ marca os que você encontrou jogando.</p></header>
+      <div id="archive-list" class="archive"></div>
+      <div class="scr-foot"><button class="back" data-act="back">← Voltar</button></div>
+    </section>
+
+    <section id="credits" class="screen">
+      <div class="credits-scroll" id="credits-body"></div>
+      <div class="scr-foot"><button class="back" data-act="back">← Voltar</button></div>
+    </section>
+
+    <section id="settings" class="screen">
+      <div class="panel">
+        <h2>Configurações</h2>
+        <label>Qualidade gráfica
+          <select id="opt-quality"><option value="high">Alta</option><option value="medium">Média</option><option value="low">Leve (VR / celular)</option></select>
+        </label>
+        <label>Volume geral <input type="range" id="opt-volume" min="0" max="1" step="0.05" /></label>
+        <label>Música <input type="range" id="opt-music" min="0" max="1" step="0.05" /></label>
+        <div class="controls-help">
+          <div><b>Teclado e mouse</b> WASD/setas andam · Shift corre · arraste o mouse para olhar · roda aproxima · <kbd>E</kbd>/<kbd>Espaço</kbd> interage · <kbd>Esc</kbd> pausa</div>
+          <div><b>Toque</b> lado esquerdo move · lado direito olha · botão ● interage</div>
+          <div><b>Controle</b> analógicos movem e olham · <kbd>A</kbd> interage · Start pausa</div>
+          <div><b>Realidade virtual</b> analógico esquerdo anda · direito gira · gatilho interage · B/Y pausa</div>
+        </div>
+        <button class="back primary" data-act="back">Fechar</button>
+      </div>
+    </section>
+
+    <section id="pause" class="screen">
+      <div class="panel">
+        <h2>Pausa</h2>
+        <nav class="menu">
+          <button data-act="resume" class="primary">Continuar</button>
+          <button data-act="restart">Reiniciar capítulo</button>
+          <button data-act="settings">Configurações</button>
+          <button data-act="archive">Acervo Histórico</button>
+          <button data-act="title">Menu principal</button>
+        </nav>
+      </div>
+    </section>
+
+    <div id="hud">
+      <div id="objective"><small>Objetivo</small><div id="objective-text"></div></div>
+      <div id="chapter-tag"></div>
+      <button id="btn-pause" class="icon-btn" title="Pausa (Esc)" aria-label="Pausa">❚❚</button>
+      <div id="prompt"><kbd id="prompt-key">E</kbd><span id="prompt-text"></span></div>
+      <div id="toasts"></div>
+    </div>
+
+    <div id="dialog">
+      <div class="dlg-name" id="dlg-name"></div>
+      <div class="dlg-text" id="dlg-text"></div>
+      <div class="dlg-choices" id="dlg-choices"></div>
+      <div class="dlg-next">▼</div>
+    </div>
+
+    <div id="chapter-card"><div class="cc-kicker" id="cc-kicker"></div><h2 id="cc-title"></h2><div class="cc-line"></div><div class="cc-sub" id="cc-sub"></div></div>
+
+    <div id="record">
+      <div class="rec-paper">
+        <div class="rec-kicker" id="rec-kicker">Registro histórico</div>
+        <h3 id="rec-title"></h3>
+        <div id="rec-body" class="rec-body"></div>
+        <div id="rec-source" class="rec-source"></div>
+        <button id="rec-close" class="primary">Continuar ▸</button>
+      </div>
+    </div>
+
+    <canvas id="rhythm" width="560" height="560"></canvas>
+    <div id="touch"><div id="stick"><div id="knob"></div></div><button id="btn-act" aria-label="Interagir">●</button></div>
+    <div id="fade"></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

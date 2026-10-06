@@ -1,0 +1,20 @@
+{
+  "name": "caminhos-da-memoria",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Caminhos da Memória — jogo educativo 3D/VR sobre a formação de Vargem Alta (ES)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/nunito": "^5.3.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.3"
+  }
+}
