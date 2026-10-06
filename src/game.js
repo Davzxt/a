@@ -391,13 +391,22 @@ export class Game {
     this.inter.push(it);
     return it;
   }
+  // Testes: confere se o jogador consegue chegar perto o bastante do alvo (colisões incluídas)
+  checkReach(target, r, label) {
+    const p = this.objPos(target);
+    if (!p || !this.world) return;
+    const probe = new THREE.Vector3(p.x + 0.03, 0, p.z + 0.02);
+    for (let i = 0; i < 4; i++) this.world.collide(probe, 0.33);
+    const d = Math.hypot(probe.x - p.x, probe.z - p.z);
+    if (d >= r) console.error(`[auto] alvo inalcançável (${d.toFixed(2)} m ≥ ${r} m): ${label}`);
+  }
   clearInteract() { for (const it of [...this.inter]) it.remove(); this.ui.prompt(null); }
   interact(target, label, opts = {}) {
     const rid = this.runId;
     this.step();
     return new Promise((res) => {
       const it = this.addInteract(target, label, { ...opts, onUse: () => { it.remove(); res(); } });
-      if (this.auto) setTimeout(() => { const p = this.objPos(target); if (p) this.player.place(p.x + 1.2, p.z + 1.2, this.player.yaw); it.onUse(); }, 20);
+      if (this.auto) setTimeout(() => { this.checkReach(target, it.r, label); const p = this.objPos(target); if (p) this.player.place(p.x + 1.2, p.z + 1.2, this.player.yaw); it.onUse(); }, 20);
     }).then(() => this._chk(rid));
   }
   // Vários alvos, em qualquer ordem. items: [{target, label, onUse, toast}]
@@ -425,7 +434,7 @@ export class Game {
         });
       }
       upd();
-      if (this.auto) items.forEach((it, k) => setTimeout(() => !it.done && it.handle.onUse(), 30 + k * 40));
+      if (this.auto) items.forEach((it, k) => setTimeout(() => { if (it.done) return; this.checkReach(it.target, it.handle.r, it.label); it.handle.onUse(); }, 30 + k * 40));
     }).then(() => this._chk(rid));
   }
   reach(pos, r = 4) {

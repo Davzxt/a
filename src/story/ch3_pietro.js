@@ -10,7 +10,7 @@ import { B, carryTask, suitcase } from './kit.js';
 const MORNING = pal({ top: '#3f86d8', mid: '#d6eaf5', bottom: '#7a7a6a', sunCol: '#fff3dc', sun: [140, 40], sunI: 3.3, hemi: ['#b5d3f0', '#7a6a4a', 1.2], fog: '#cfe3ee', near: 70, far: 640, fogH: [0.18, 0, 0.06], clouds: 0.6, exposure: 1.0, bloom: 0.4 });
 const AFTERNOON = pal({ top: '#4a7ec0', mid: '#f6d2a2', bottom: '#8a6a4a', sunCol: '#ffcf90', sun: [250, 17], sunI: 3.2, hemi: ['#a9c3e6', '#6b5236', 1.25], fog: '#efcfa2', near: 60, far: 620, fogH: [0.22, 0, 0.06], clouds: 0.5, exposure: 1.02, bloom: 0.5, cloudLit: '#ffe2b8', cloudShade: '#b08a8a', sat: 1.12 });
 
-const START = B(82, -1, 30), CG = B(34, -1, 47), HOUSE = B(2, -1, 47), CART = B(15, -1, 39), SACKS = B(7.5, -1, 41.5), CHAPEL = B(-22, -1, 50);
+const START = B(82, -1, 30), CG = B(34, -1, 47), HOUSE = B(2, -1, 50), CART = B(15, -1, 39), SACKS = B(9.5, -1, 45.5), CHAPEL = B(-22, -1, 50);
 const SPOTS = [B(13, -1, 53), B(16, -1, 55), B(19, -1, 57), B(22, -1, 59)];
 const ROAD = [[98, -1, 27], [82, -1, 30], [64, -1, 33], [46, -1, 35], [28, -1, 36], [14, -1, 37], [-2, -1, 38], [-20, -1, 40]].map(([x, s, d]) => [x, riverZ(x) + s * d]);
 const RAIL = alongRiver(-220, 220, -1, 16, 6);
@@ -31,7 +31,14 @@ export default {
     buildNature(W, { trees: 1, grass: 1, bushes: 1.4, bananas: [B(-6, -1, 52), B(9, -1, 50), B(-8, -1, 41)].map((p) => ({ ...p })) });
     place(W, casaGrande({ ruined: true }), CG.x, CG.z, -0.25);
     W.house = place(W, italianHouse(), HOUSE.x, HOUSE.z, 0);
-    W.house.userData.setStage(0);
+    const hp = W.house.position, pc = W.house.userData.porch;
+    W.houseSpot = W.at(hp.x + pc[0], hp.z + pc[1]);
+    // etapas da obra: as paredes passam a bloquear a passagem só depois de erguidas
+    W.setHouse = (n) => {
+      W.house.userData.setStage(n);
+      if (n >= 1 && !W.walls) { W.walls = true; const b = W.house.userData.wallBox; W.addBox(hp.x + b[0], hp.z + b[1], b[2], b[3], 0); }
+    };
+    W.setHouse(0);
     W.cartObj = place(W, cart('planks'), CART.x, CART.z, 0.3);
     const sm = place(W, mule(true), START.x - 3, START.z + 2.2, -Math.PI / 2);
     W.muleObj = sm;
@@ -109,9 +116,9 @@ export default {
     await G.collect(SPOTS.map((p) => ({ target: W.at(p.x, p.z), label: 'Plantar uma muda de café', onUse: plant(p), radius: 1.9 })), 'Plante as mudas de café');
     await G.say([['giuseppe', 'Bravo! Agora a casa. Traga as tábuas da carroça.']]);
     await carryTask(G, {
-      from: W.cartObj, to: W.house, count: 3, make: () => planks(2), title: 'Ajude a erguer a casa: leve as tábuas',
-      pick: 'Pegar tábuas', put: 'Entregar as tábuas',
-      onPut: (i) => W.house.userData.setStage(i + 1),
+      from: W.cartObj, to: W.houseSpot, count: 3, make: () => planks(2), title: 'Ajude a erguer a casa: leve as tábuas',
+      pick: 'Pegar tábuas', put: 'Colocar as tábuas na obra',
+      onPut: (i) => W.setHouse(i + 1),
     });
     k.giuseppe.anim = 'idle';
     await G.say([['lucia', 'Uma casa! Pietro, agora sim estamos em casa.']]);
@@ -121,7 +128,7 @@ export default {
     await G.fade(1, 1.4);
     W.late.visible = true;
     saplings.visible = false;
-    W.house.userData.setStage(3);
+    W.setHouse(3);
     G.engine.applyPalette(AFTERNOON);
     G.curPal = AFTERNOON;
     k.giuseppe.remove(); k.nina.remove();

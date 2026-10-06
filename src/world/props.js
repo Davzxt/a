@@ -310,11 +310,15 @@ export function drum(big = true) {
 }
 
 export function italianHouse() {
-  const g = new THREE.Group(), L = 7, D = 5.5, H = 2.8, y0 = 0.7;
+  const g = new THREE.Group(), L = 7, D = 5.5, H = 2.8, y0 = 0.7, P = 1.9, zf = D / 2 + 0.15 + P;
   const parts = { base: new THREE.Group(), frame: new THREE.Group(), walls: new THREE.Group(), roof: new THREE.Group(), detail: new THREE.Group() };
   Object.values(parts).forEach((p) => g.add(p));
-  box(parts.base, L + 0.3, y0, D + 0.3, '#857c70', 0, y0 / 2, 0);
-  box(parts.base, L + 0.3, 0.12, D + 2.2, '#8a6440', 0, y0 + 0.06, 0.95);
+  // alicerce de pedra que entra no chão + assoalho e varanda (piso caminhável)
+  box(parts.base, L + 0.3, y0 + 1.04, D + 0.3, '#857c70', 0, (y0 - 1.04) / 2 - 0.06, 0);
+  box(parts.base, L + 0.3, 0.12, D + 0.3 + P, '#8a6440', 0, y0 - 0.06, P / 2);
+  for (const x of [-L / 2, -L / 6, L / 6, L / 2]) box(parts.base, 0.32, y0 + 1.04, 0.32, '#7d756a', x, (y0 - 1.04) / 2 - 0.06, zf - 0.2);
+  // degraus de pedra na frente da varanda
+  [[0.47, 0.18], [0.24, 0.53]].forEach(([top, dz]) => box(parts.base, 1.8, top + 1.1, 0.36, '#8f877a', 0, (top - 1.1) / 2, zf + dz));
   for (const x of [-L / 2, -L / 6, L / 6, L / 2]) for (const z of [-D / 2, D / 2]) cyl(parts.frame, 0.09, 0.09, H, '#6a4a30', x, y0 + H / 2, z, 6);
   for (const z of [-D / 2, D / 2]) box(parts.frame, L, 0.14, 0.14, '#6a4a30', 0, y0 + H, z);
   const wc = '#a8744a';
@@ -328,10 +332,10 @@ export function italianHouse() {
   door(parts.detail, 0, D / 2 + 0.05, { y: y0, h: 2.1, c: '#4f6a3a' });
   windowUnit(parts.detail, -2.2, y0 + 1.5, D / 2 + 0.08, { shutter: '#4f7a4a', w: 0.9, h: 1.1 });
   windowUnit(parts.detail, 2.2, y0 + 1.5, D / 2 + 0.08, { shutter: '#4f7a4a', w: 0.9, h: 1.1 });
-  for (const x of [-L / 2, -1.2, 1.2, L / 2]) cyl(parts.detail, 0.07, 0.07, 2.2, '#6a4a30', x, y0 + 1.1, D / 2 + 1.8, 6);
+  for (const x of [-L / 2, -1.2, 1.2, L / 2]) cyl(parts.detail, 0.07, 0.07, 2.2, '#6a4a30', x, y0 + 1.1, zf - 0.2, 6);
   const pr = box(parts.detail, L + 0.4, 0.1, 2.3, '#7a3e2a', 0, y0 + 2.35, D / 2 + 1.05);
   pr.rotation.x = 0.18;
-  box(parts.detail, L, 0.08, 0.06, '#6a4a30', 0, y0 + 0.9, D / 2 + 1.85);
+  for (const s of [-1, 1]) box(parts.detail, L / 2 - 1.2, 0.08, 0.06, '#6a4a30', s * (1.2 + (L / 2 - 1.2) / 2), y0 + 0.9, zf - 0.2);
   box(parts.detail, 0.7, 4.6, 0.7, '#7d756a', L / 2 - 0.8, y0 + 2.4, -D / 2 + 0.6);
   const smoke = particles({ count: 24, mode: 3, spread: [0.5, 7, 0.5], color: '#cfcac2', size: 1, rate: 0.07, opacity: 0.22, additive: false });
   smoke.position.set(L / 2 - 0.8, y0 + 4.8, -D / 2 + 0.6);
@@ -340,7 +344,10 @@ export function italianHouse() {
   g.userData.setStage = (n) => order.forEach((k, i) => { parts[k].visible = i === 0 || (k === 'frame' ? n >= 0 && n < 2 : i - 1 <= n); });
   g.userData.setStage(3);
   ['base', 'frame', 'walls', 'roof', 'detail'].forEach((k) => bake(parts[k]));
-  g.userData.boxes = [[0, 0, L / 2 + 0.15, D / 2 + 0.15]];
+  // piso, varanda e degraus são caminháveis; as paredes só bloqueiam depois de erguidas (wallBox)
+  g.userData.surfaces = [[0, P / 2, L / 2 + 0.15, (D + 0.3 + P) / 2, y0], [0, zf + 0.18, 0.9, 0.18, 0.47], [0, zf + 0.53, 0.9, 0.18, 0.24]];
+  g.userData.wallBox = [0, 0, L / 2 + 0.15, D / 2 + 0.15];
+  g.userData.porch = [0, D / 2 + 0.15 + P / 2];
   return g;
 }
 
