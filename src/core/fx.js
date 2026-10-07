@@ -187,10 +187,11 @@ void main(){ float r = length(gl_PointCoord - 0.5); if (r > 0.5) discard; float 
 }
 
 // Cachoeira estilizada (faixa animada + névoa).
-export function makeCascade(w = 3, h = 10) {
-  const geo = new THREE.PlaneGeometry(w, h, 1, 10);
+// bow(k): quanto a lâmina avança para fora (k = 0 no topo, 1 na base) — permite seguir a face de uma pedra.
+export function makeCascade(w = 3, h = 10, bow = (k) => k * k * 1.6) {
+  const geo = new THREE.PlaneGeometry(w, h, 4, 16);
   const pa = geo.attributes.position;
-  for (let i = 0; i < pa.count; i++) { const y = pa.getY(i); pa.setZ(i, Math.pow((h / 2 - y) / h, 2) * 1.6); }
+  for (let i = 0; i < pa.count; i++) { const y = pa.getY(i); pa.setZ(i, bow((h / 2 - y) / h) + Math.abs(pa.getX(i)) * -0.08); }
   geo.computeVertexNormals();
   const mat = new THREE.ShaderMaterial({
     uniforms: { uTime: timeU },

@@ -1,5 +1,6 @@
 // Cena da tela-título: um mirante sobre o vale ao entardecer, com os quatro protagonistas.
 import * as THREE from 'three';
+import { smooth } from '../core/noise.js';
 import { pal } from '../core/engine.js';
 import { buildNature, plants } from '../world/nature.js';
 import { place, marco } from '../world/props.js';
@@ -7,6 +8,8 @@ import { particles, makeFlyers } from '../core/fx.js';
 import { B, spear, suitcase } from './kit.js';
 
 const H = B(-30, 1, 80);
+// mirante: um morro de topo plano, com os personagens perto da borda que dá para o vale
+const HC = { x: H.x + 9, z: H.z - 0.5 };
 
 export default {
   id: 'hub',
@@ -16,7 +19,9 @@ export default {
     clouds: 0.55, exposure: 1.0, bloom: 0.45, cloudLit: '#ffe2b8', cloudShade: '#b08a8a', sat: 1.12,
   }),
   cfg() {
-    return { flats: [{ x: H.x, z: H.z, r: 18 }], clear: [{ x: H.x, z: H.z, r: 24 }, { x: H.x - 40, z: H.z - 12, r: 30 }, { x: H.x - 80, z: H.z - 20, r: 30 }], bounds: { x: H.x, z: H.z, r: 40 }, forest: () => 0.75, colors: { grassA: '#6f9a3c', grassB: '#a8b44e' } };
+    return {
+      height: (x, z, h) => h + 15 * smooth(78, 15, Math.hypot(x - HC.x, (z - HC.z) * 0.9)),
+      flats: [{ x: H.x, z: H.z, r: 18 }], clear: [{ x: H.x, z: H.z, r: 24 }, { x: H.x - 40, z: H.z - 12, r: 30 }, { x: H.x - 80, z: H.z - 20, r: 30 }], bounds: { x: H.x, z: H.z, r: 40 }, forest: () => 0.75, colors: { grassA: '#6f9a3c', grassB: '#a8b44e' } };
   },
   build(G, W) {
     buildNature(W, { trees: 0.9, ipes: 0.06, flowers: 1.5, grass: 0.6, rocks: 0.3, grassAt: (x, z) => Math.min(1, Math.hypot(x - H.x, z - H.z) / 14) });
