@@ -545,7 +545,7 @@ export function basket(c = '#b08850') {
   const rim = mk(new THREE.TorusGeometry(0.32, 0.03, 5, 16), M('#8a6638'), 0, 0.38, 0, g);
   rim.rotation.x = Math.PI / 2;
   cyl(g, 0.22, 0.22, 0.02, '#8a6638', 0, 0.01, 0, 12);
-  return g;
+  return bake(g);
 }
 export function bigRock(sx = 6, sy = 4, sz = 5, c = '#a9a499') {
   let geo = new THREE.IcosahedronGeometry(1, 3);
@@ -576,7 +576,7 @@ export function drum(big = true) {
   for (const y of [0.15, h - 0.12]) { const t = mk(new THREE.TorusGeometry(r * 0.99, 0.022, 5, 18), M('#3a2416'), 0, y, 0, g); t.rotation.x = Math.PI / 2; }
   // cordas de afinação
   for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, c = cyl(g, 0.008, 0.008, h * 0.74, '#d8c49a', Math.cos(a) * r * 1.0, h * 0.5, Math.sin(a) * r * 1.0, 3); c.rotation.z = 0.08; }
-  return g;
+  return bake(g);
 }
 
 // Tábua de parede (madeira vertical com mata-juntas), em várias peças com tons variados.
@@ -925,6 +925,8 @@ function wheel(p, r, x, z, c = '#8a1f18') {
   const hub = cyl(w, r * 0.25, r * 0.25, 0.18, '#2a2a2a', 0, 0, 0, 10);
   hub.castShadow = false;
   for (let i = 0; i < 4; i++) { const sp = box(w, r * 1.7, 0.06, 0.05, '#2a2a2a', 0, Math.sign(z) * 0.065, 0); sp.rotation.y = (i / 4) * Math.PI; sp.castShadow = false; }
+  bake(w, { ao: false });
+  w.userData.dynamic = true;
   return w;
 }
 export function locomotive() {
@@ -958,7 +960,7 @@ export function locomotive() {
   g.add(smoke);
   g.userData.wheels = wheels;
   g.userData.smoke = smoke;
-  return g;
+  return bake(g, { ao: false });
 }
 export function wagon(type = 'open') {
   const g = new THREE.Group(), wheels = [];
@@ -969,14 +971,14 @@ export function wagon(type = 'open') {
   } else {
     box(g, 6.2, 2.2, 2.3, wood, 0, 2.2, 0);
     for (let i = -3; i <= 3; i++) for (const s of [-1, 1]) box(g, 0.08, 2.2, 0.05, '#' + new THREE.Color(wood).multiplyScalar(0.7).getHexString(), i * 1.0, 2.2, s * 1.16);
-    const rf = cyl(g, 1.4, 1.4, 6.5, '#3a3a3a', 0, 2.6, 0, 16);
-    rf.rotation.z = Math.PI / 2; rf.scale.set(0.3, 1, 1);
+    const rf = cyl(g, 1.2, 1.2, 6.4, '#3a3a3a', 0, 3.3, 0, 16);
+    rf.rotation.z = Math.PI / 2; rf.scale.set(0.22, 1, 1);
     if (type === 'passenger') for (let i = 0; i < 5; i++) for (const s of [-1, 1]) box(g, 0.7, 0.6, 0.05, glow('#ffd590', 0.9), -2.4 + i * 1.2, 2.5, s * 1.17);
     else box(g, 1.6, 1.8, 0.05, M('#5a3a24'), 0, 2.1, 1.17);
   }
   for (const s of [-1, 1]) for (const x of [-2.2, 2.2]) wheels.push(wheel(g, 0.42, x, s * 1.0, '#2a2a2e'));
   g.userData.wheels = wheels;
-  return g;
+  return bake(g, { ao: false });
 }
 // Composição: posiciona cada carro ao longo do trilho; s = posição da frente.
 export function makeTrain(W, path, types = ['open'], parent = W.group) {
@@ -1009,7 +1011,7 @@ export function sack(c = '#b39b72') {
   cyl(g, 0.11, 0.17, 0.14, c, 0, 0.66, 0, 8);
   cyl(g, 0.12, 0.12, 0.04, '#6a4a2a', 0, 0.62, 0, 8);
   box(g, 0.34, 0.12, 0.02, '#7a5a3a', 0, 0.36, 0.25);
-  return g;
+  return bake(g);
 }
 export function barrel() {
   const g = new THREE.Group();
@@ -1022,7 +1024,7 @@ export function barrel() {
   mk(geo, VCM(), 0, 0, 0, g);
   cyl(g, 0.26, 0.26, 0.02, '#6a4426', 0, 0.85, 0, 16);
   for (const y of [0.13, 0.3, 0.56, 0.73]) { const t = mk(new THREE.TorusGeometry(y < 0.2 || y > 0.7 ? 0.315 : 0.345, 0.018, 4, 18), M('#3a3a3a'), 0, y, 0, g); t.rotation.x = Math.PI / 2; }
-  return g;
+  return bake(g);
 }
 export function crate(s = 0.6, c = '#9a7044') {
   const g = new THREE.Group();
@@ -1033,19 +1035,19 @@ export function crate(s = 0.6, c = '#9a7044') {
     box(g, s * 0.12, s, s * 0.12, d, a * s * 0.44, s / 2, b * s * 0.44);
     box(g, s * 0.12, s * 0.12, s, d, a * s * 0.44, s / 2 + b * s * 0.44, 0);
   }
-  return g;
+  return bake(g);
 }
 export function planks(n = 1) {
   const g = new THREE.Group();
   for (let i = 0; i < n; i++) box(g, 2.6, 0.08, 0.28, i % 2 ? '#b88a5a' : '#c49864', 0, 0.06 + i * 0.09, (i % 3) * 0.3 - 0.3, (i % 2) * 0.05);
-  return g;
+  return bake(g);
 }
 export function sapeBundle() {
   const g = new THREE.Group();
   const b = cyl(g, 0.16, 0.22, 1.5, '#c9a95e', 0, 0, 0, 10);
   b.rotation.z = Math.PI / 2;
   for (const x of [-0.4, 0.4]) { const t = cyl(g, 0.19, 0.19, 0.07, '#6a4a2a', x, 0, 0, 10); t.rotation.z = Math.PI / 2; }
-  return g;
+  return bake(g);
 }
 export function chest(c = '#6a4a30') {
   const g = new THREE.Group();
@@ -1055,7 +1057,7 @@ export function chest(c = '#6a4a30') {
   lid.scale.set(1, 1, 0.55);
   for (const x of [-0.3, 0.3]) box(g, 0.06, 0.55, 0.58, '#3a3a3a', x, 0.3, 0);
   box(g, 0.12, 0.14, 0.04, '#c9a24a', 0, 0.45, 0.29);
-  return g;
+  return bake(g);
 }
 export function cart(load = null) {
   const g = new THREE.Group();
@@ -1075,7 +1077,7 @@ export function cart(load = null) {
   if (load === 'sacks') for (let i = 0; i < 4; i++) put(sack(), -0.8 + (i % 2) * 0.8, 0.95, i < 2 ? -0.3 : 0.3, g);
   if (load === 'planks') { const p = planks(6); p.position.y = 0.92; g.add(p); }
   g.userData.circles = [[0, 0, 1.3]];
-  return g;
+  return bake(g);
 }
 export function mule(load = true) {
   const g = new THREE.Group(), c = '#6a5646', dark = '#3a2e26', muzzle = '#a89482';
@@ -1116,6 +1118,11 @@ export function mule(load = true) {
     ch.position.set(0, 1.62, 0);
     g.add(ch);
   }
+  // partes fixas numa malha só; cabeça, pernas e rabo continuam animáveis
+  head.userData.dynamic = true; tail.userData.dynamic = true;
+  legs.forEach((l) => { bake(l); l.userData.dynamic = true; });
+  bake(head);
+  bake(g);
   g.userData.dynamic = true;
   g.userData.legs = legs;
   g.userData.update = (t) => { tail.rotation.x = Math.sin(t * 1.3) * 0.25; head.rotation.y = Math.sin(t * 0.4) * 0.15; head.rotation.z = Math.sin(t * 0.7) * 0.05; };
@@ -1127,7 +1134,7 @@ export function bench() {
   for (let i = 0; i < 3; i++) box(g, 1.8, 0.06, 0.14, '#7a5434', 0, 0.48, -0.15 + i * 0.15);
   for (let i = 0; i < 2; i++) box(g, 1.8, 0.12, 0.05, '#7a5434', 0, 0.68 + i * 0.18, -0.24);
   for (const x of [-0.75, 0.75]) { box(g, 0.08, 0.48, 0.4, '#2e2e2e', x, 0.24, 0); box(g, 0.06, 0.45, 0.06, '#2e2e2e', x, 0.7, -0.25); }
-  return g;
+  return bake(g);
 }
 export function lantern(on = true) {
   const g = new THREE.Group();
@@ -1137,7 +1144,7 @@ export function lantern(on = true) {
   mk(new THREE.ConeGeometry(0.11, 0.08, 4), M('#3a2e26'), 0, 0.13, 0, g, 0, Math.PI / 4, 0);
   const h = mk(new THREE.TorusGeometry(0.05, 0.008, 4, 10, Math.PI), M('#3a2e26'), 0, 0.17, 0, g);
   h.castShadow = false;
-  return g;
+  return bake(g);
 }
 export function streetLamp(old = false) {
   const g = new THREE.Group(), c = old ? '#2a2a2a' : '#2f3a38';
@@ -1153,7 +1160,7 @@ export function streetLamp(old = false) {
   pl.position.set(0.7, 3.6, 0);
   g.add(pl);
   g.userData.circles = [[0, 0, 0.25]];
-  return g;
+  return bake(g);
 }
 export function fence(W, pts, c = '#7a5a3a') {
   const g = new THREE.Group();
@@ -1178,7 +1185,7 @@ export function marco(lines = ['VARGEM ALTA', 'Espírito Santo']) {
   g.add(s);
   g.userData.circles = [[0, 0, 0.95]];
   g.userData.ground = 'max';
-  return g;
+  return bake(g);
 }
 export function stump(h = 0.5) {
   const g = new THREE.Group();
@@ -1186,14 +1193,14 @@ export function stump(h = 0.5) {
   cyl(g, 0.29, 0.29, 0.02, '#d8b88a', 0, h + 0.01, 0, 9);
   const ring = mk(new THREE.TorusGeometry(0.17, 0.012, 3, 12), M('#b89868'), 0, h + 0.025, 0, g);
   ring.rotation.x = Math.PI / 2;
-  return g;
+  return bake(g);
 }
 export function log(len = 3) {
   const g = new THREE.Group();
   const l = cyl(g, 0.25, 0.28, len, '#5a4030', 0, 0.25, 0, 10);
   l.rotation.z = Math.PI / 2;
   for (const s of [-1, 1]) { const e = cyl(g, 0.24, 0.24, 0.02, '#d8b88a', s * (len / 2 + 0.005), 0.25, 0, 10); e.rotation.z = Math.PI / 2; }
-  return g;
+  return bake(g);
 }
 export function cutTree() {
   const g = new THREE.Group();
@@ -1201,5 +1208,5 @@ export function cutTree() {
   box(g, 0.5, 0.35, 0.3, '#e0c49a', 0, 0.9, 0.38).rotation.y = 0.2;
   box(g, 0.3, 0.3, 0.25, '#e0c49a', 0.3, 1.6, 0.3).rotation.y = 0.8;
   for (let i = 0; i < 5; i++) ball(g, 0.12, '#e0c49a', Math.cos(i * 1.3) * 0.9, 0.04, Math.sin(i * 1.3) * 0.9, [1.4, 0.4, 0.9], 0);
-  return g;
+  return bake(g);
 }

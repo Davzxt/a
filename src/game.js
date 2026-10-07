@@ -108,6 +108,7 @@ export class Game {
     this.ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffd27a').multiplyScalar(1.6), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
     this.ringGeo = new THREE.RingGeometry(0.55, 0.62, 40).rotateX(-Math.PI / 2);
     window.__cdm = this;
+    if (import.meta.env?.DEV) window.__THREE = THREE;
     this.engine.renderer.setAnimationLoop(() => this.tick());
   }
 

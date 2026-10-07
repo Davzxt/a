@@ -1,7 +1,7 @@
 // Ferramentas compartilhadas pelos capítulos: posições, adereços e minijogos.
 import * as THREE from 'three';
 import { riverZ } from '../world/terrain.js';
-import { cyl, box, mk } from '../world/props.js';
+import { cyl, box, mk, bake } from '../world/props.js';
 import { M } from '../core/engine.js';
 import { particles } from '../core/fx.js';
 
@@ -13,6 +13,7 @@ export function spear() {
   cyl(g, 0.018, 0.022, 1.9, '#7a5a3a', 0, 0.5, 0, 6);
   mk(new THREE.ConeGeometry(0.035, 0.2, 5), M('#5c5a58', { metalness: 0.3, roughness: 0.5 }), 0, 1.54, 0, g);
   for (const y of [1.36, 1.4]) cyl(g, 0.026, 0.026, 0.02, '#b5562a', 0, y, 0, 6);
+  bake(g);
   g.rotation.x = 1.32;
   return g;
 }
@@ -21,7 +22,7 @@ export function suitcase() {
   box(g, 0.15, 0.36, 0.52, '#7a4526', 0, -0.25, 0);
   box(g, 0.16, 0.04, 0.53, '#5a3018', 0, -0.2, 0);
   box(g, 0.04, 0.05, 0.16, '#3a2414', 0, -0.05, 0);
-  return g;
+  return bake(g);
 }
 export function burst(W, pos, color = '#ffb060', ms = 900) {
   const p = particles({ count: 40, mode: 1, spread: [0.6, 1.4, 0.6], color, size: 0.05, rate: 1.4, intensity: 3 });
