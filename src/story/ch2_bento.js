@@ -7,7 +7,7 @@ import { riverZ, alongRiver } from '../world/terrain.js';
 import { place, casaGrande, senzala, terreiro, rancho, campfire, drum, sapeBundle, lantern, clayPot, log, box, cyl } from '../world/props.js';
 import { B, carryTask, rhythmGame, burst } from './kit.js';
 
-const NIGHT = pal({ top: '#070e24', mid: '#22345e', bottom: '#0a0e18', sunCol: '#9fb8ff', sun: [250, 38], sunI: 1.5, hemi: ['#4a64a8', '#141a28', 1.15], fog: '#16244a', near: 22, far: 260, fogH: [0.38, -1, 0.3], clouds: 0.22, stars: 1, exposure: 1.55, bloom: 0.8, cloudLit: '#4a5a80', cloudShade: '#141c30', sunSize: 0.0013, glow: 0.6, sat: 1.0, water: ['#0a1a28', '#1a3040'] });
+const NIGHT = pal({ top: '#070e24', mid: '#22345e', bottom: '#0a0e18', sunCol: '#9fb8ff', sun: [250, 38], sunI: 1.5, hemi: ['#4a64a8', '#141a28', 1.15], fog: '#16244a', near: 22, far: 260, fogH: [0.38, -1, 0.3], clouds: 0.22, stars: 1, exposure: 1.55, bloom: 0.8, cloudLit: '#4a5a80', cloudShade: '#141c30', sunSize: 0.0013, glow: 0.6, sat: 1.0, water: ['#0a1a28', '#1a3040'], rimK: 0.16, warm: '#ffd8a0', cool: '#5070b0', split: 0.16 });
 
 const SEN = B(-12, -1, 32), START = B(-15, -1, 26), JOANA = B(-8, -1, 26.6), TER = B(15, -1, 27), CG = B(34, -1, 47);
 const BX = -2, BZ = riverZ(-2), BR_S = { x: BX, z: BZ - 11 }, EDGE = B(-2, 1, 18), QUI = B(36, 1, 64);

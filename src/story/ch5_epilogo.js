@@ -9,7 +9,7 @@ import { Character } from '../world/character.js';
 import { LOOKS } from './data.js';
 import { B, spear } from './kit.js';
 
-const DUSK = pal({ top: '#16204a', mid: '#ec8a5c', bottom: '#2a2030', sunCol: '#ff9a62', sun: [255, 2.5], sunI: 1.1, hemi: ['#5a6a9a', '#2a2020', 0.9], fog: '#6a5070', near: 40, far: 420, fogH: [0.25, 0, 0.08], clouds: 0.4, stars: 0.55, exposure: 1.3, bloom: 0.85, cloudLit: '#ffb48a', cloudShade: '#4a3a5a', glow: 1.3, water: ['#1a2238', '#5a4a60'] });
+const DUSK = pal({ top: '#16204a', mid: '#ec8a5c', bottom: '#2a2030', sunCol: '#ff9a62', sun: [255, 2.5], sunI: 1.1, hemi: ['#5a6a9a', '#2a2020', 0.9], fog: '#6a5070', near: 40, far: 420, fogH: [0.25, 0, 0.08], clouds: 0.4, stars: 0.55, exposure: 1.3, bloom: 0.85, cloudLit: '#ffb48a', cloudShade: '#4a3a5a', glow: 1.3, water: ['#1a2238', '#5a4a60'], rimK: 0.28 });
 const PZ = B(-4, -1, 31), STREET = alongRiver(-72, 72, -1, 27, 6);
 const slope = (x) => riverZ(x + 0.5) - riverZ(x - 0.5);
 const faceN = (x) => Math.atan2(-slope(x), 1);

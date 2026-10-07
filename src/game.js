@@ -172,6 +172,7 @@ export class Game {
     this.chapter = ch;
     this.chapterId = id;
     ch.build(this, W);
+    W.finalize();
     return W;
   }
 

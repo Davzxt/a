@@ -79,9 +79,17 @@ export default {
     // vau com pedras e novo acampamento junto à pedra grande
     for (let i = -3; i <= 3; i++) place(W, bigRock(0.55, 0.3, 0.5, '#7d786f'), FORD.x + (i % 2) * 0.6, FORD.z + i * 1.9, i, -0.1);
     const n = W.at(NEW.x, NEW.z);
-    place(W, bigRock(9, 7, 7, '#a8a296'), n.x - 9, n.z + 10, 0.4, -1.5);
-    const cas = makeCascade(3.2, 9);
-    W.add(cas, n.x - 5.6, n.z + 5.2, 2.3, 0);
+    // a pedra grande e a cachoeira que escorre rente à sua face
+    const RK = { x: n.x - 9, z: n.z + 10, sx: 9, sy: 12, sz: 7.5, ry: 0.4, dy: -1.5 };
+    place(W, bigRock(RK.sx, RK.sy, RK.sz, '#a8a296'), RK.x, RK.z, RK.ry, RK.dy);
+    const dl = Math.hypot(n.x - RK.x, n.z - RK.z), dx = (n.x - RK.x) / dl, dz = (n.z - RK.z) / dl;
+    const lx = dx * Math.cos(RK.ry) - dz * Math.sin(RK.ry), lz = dx * Math.sin(RK.ry) + dz * Math.cos(RK.ry);
+    const R0 = 0.93 / Math.hypot(lx / RK.sx, lz / RK.sz), gy = W.groundAt(n.x, n.z);
+    const reach = (y) => R0 * Math.sqrt(Math.max(1 - ((y - RK.dy) / RK.sy) ** 2, 0));
+    const CH = 7, top = reach(CH);
+    const cas = makeCascade(3.2, CH, (k) => reach(CH * (1 - k)) - top + 0.35);
+    W.add(cas, RK.x + dx * top, RK.z + dz * top, Math.atan2(dx, dz), 0);
+    cas.position.y = gy;
     W.newFire = place(W, campfire({ lit: false }), n.x, n.z);
     W.addCollider(n.x - 9, n.z + 10, 7);
     // vida: névoa, pássaros, borboletas-azuis

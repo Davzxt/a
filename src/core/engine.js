@@ -43,10 +43,33 @@ fogFactor = clamp( fogFactor + fogH * ( 1.0 - fogFactor ), 0.0, 1.0 );
 gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );
 #endif`;
 
-// Injeta a neblina de altura e (opcional) o balanço do vento na vegetação.
-export function patch(m, wind = 0) {
+// Luz "envolvente" (wrap): o terminador fica macio, como em animação estilizada.
+C.lights_physical_pars_fragment = C.lights_physical_pars_fragment.replace(
+  /float dotNL = saturate\( dot\( geometryNormal, directLight\.direction \) \);\s*vec3 irradiance = dotNL \* directLight\.color;/,
+  'float dotNL = saturate( dot( geometryNormal, directLight.direction ) );\n\tfloat wrapNL = saturate( ( dot( geometryNormal, directLight.direction ) + 0.32 ) / 1.32 );\n\tvec3 irradiance = wrapNL * wrapNL * ( 3.0 - 2.0 * wrapNL ) * directLight.color;')
+  // o brilho especular continua usando o N·L real (e limitado): sem pontos estourados nas bordas
+  .replace('reflectedLight.directSpecular += irradiance * specularBRDF', 'reflectedLight.directSpecular += ( dotNL * directLight.color ) * min( specularBRDF, vec3( 6.0 ) )');
+
+// Sombras que se desvanecem perto da borda do mapa de sombra (sem "quadrado" escuro ao longe).
+C.shadowmap_pars_fragment = C.shadowmap_pars_fragment.replace(
+  /(float getShadow\( sampler2DShadow shadowMap[^{]*\{[\s\S]*?)return mix\( 1\.0, shadow, shadowIntensity \);/,
+  '$1vec2 edgeD = abs( shadowCoord.xy * 2.0 - 1.0 );\n\t\t\treturn mix( 1.0, shadow, shadowIntensity * ( 1.0 - smoothstep( 0.72, 0.98, max( edgeD.x, edgeD.y ) ) ) );');
+
+// Luz de recorte (rim) global: cor e força vêm da paleta do capítulo.
+export const rimU = { value: new THREE.Color(0.3, 0.28, 0.25) };
+
+// Injeta a neblina de altura, o recorte de luz e (opcional) o balanço do vento na vegetação.
+export function patch(m, wind = 0, rim = 1) {
   m.onBeforeCompile = (sh) => {
     sh.uniforms.fogHP = fogHP;
+    if (rim && sh.fragmentShader.includes('#include <lights_fragment_begin>')) {
+      sh.uniforms.uRim = rimU;
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform vec3 uRim;')
+        .replace('#include <opaque_fragment>', `float rimF = pow( 1.0 - saturate( dot( normal, geometryViewDir ) ), 3.0 );
+outgoingLight += uRim * ${(+rim).toFixed(2)} * rimF * ( 0.45 + 0.55 * saturate( normal.y * 0.5 + 0.5 ) ) * ( 0.6 + diffuseColor.rgb * 0.8 );
+#include <opaque_fragment>`);
+    }
     if (!wind) return;
     sh.uniforms.uTime = timeU;
     sh.uniforms.uWind = { value: wind };
@@ -59,10 +82,11 @@ wOrg = instanceMatrix[3].xyz;
 #endif
 float wK = max(position.y, 0.0) * uWind;
 float wP = uTime * 1.7 + wOrg.x * 0.23 + wOrg.z * 0.19;
-transformed.x += (sin(wP) + 0.4 * sin(wP * 2.7 + 1.3)) * wK;
-transformed.z += cos(wP * 0.83) * 0.6 * wK;`);
+float gust = 0.75 + 0.25 * sin(uTime * 0.37 + wOrg.x * 0.02);
+transformed.x += (sin(wP) + 0.4 * sin(wP * 2.7 + 1.3)) * wK * gust;
+transformed.z += cos(wP * 0.83) * 0.6 * wK * gust;`);
   };
-  m.customProgramCacheKey = () => 'cdm' + wind;
+  m.customProgramCacheKey = () => 'cdm' + wind + '_' + rim;
   return m;
 }
 
@@ -71,11 +95,15 @@ export function M(color, o = {}) {
   const key = color + JSON.stringify(o);
   let m = matCache.get(key);
   if (!m) {
-    m = patch(new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0, flatShading: true, ...o }));
+    const { rim = 1, ...rest } = o;
+    m = patch(new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0, ...rest }), 0, rim);
     matCache.set(key, m);
   }
   return m;
 }
+// Material único com cores por vértice: construções e personagens viram poucas chamadas de desenho.
+export function VCM(side = THREE.FrontSide, rough = 0.84) { return M('#ffffff', { vertexColors: true, side, roughness: rough }); }
+
 // Material emissivo (janelas acesas, lampiões) — brilha com o bloom.
 export function glow(color, k = 2.5) {
   const key = 'glow' + color + k;
@@ -97,6 +125,8 @@ export function pal(d) {
     sat: d.sat ?? 1.1, contrast: d.contrast ?? 1.04, sepia: d.sepia ?? 0, vignette: d.vignette ?? 0.4,
     cloudLit: c(d.cloudLit || '#ffffff'), cloudShade: c(d.cloudShade || '#9aa6b8'), glow: d.glow ?? 1,
     sunSize: d.sunSize ?? 0.0016, deep: c(d.water?.[0] || '#1f4b55'), shallow: c(d.water?.[1] || '#4f8a7c'),
+    rim: d.rim ? c(d.rim) : c(d.sunCol).lerp(c(d.hemi[0]), 0.5).multiplyScalar(d.rimK ?? 0.38),
+    warm: c(d.warm || '#ffe2b0'), cool: c(d.cool || '#6a86b0'), split: d.split ?? 0.12,
   };
 }
 export function mixPal(a, b, t, out) {
@@ -162,9 +192,10 @@ void main(){
 }
 
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null }, uSat: { value: 1.1 }, uContrast: { value: 1.04 }, uSepia: { value: 0 }, uVig: { value: 0.4 }, uTime: { value: 0 }, uGrain: { value: 0.03 } },
+  uniforms: { tDiffuse: { value: null }, uSat: { value: 1.1 }, uContrast: { value: 1.04 }, uSepia: { value: 0 }, uVig: { value: 0.4 }, uTime: { value: 0 }, uGrain: { value: 0.012 },
+    uWarm: { value: new THREE.Color('#ffe2b0') }, uCool: { value: new THREE.Color('#6a86b0') }, uSplit: { value: 0.12 } },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uSat, uContrast, uSepia, uVig, uTime, uGrain; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uSat, uContrast, uSepia, uVig, uTime, uGrain, uSplit; uniform vec3 uWarm, uCool; varying vec2 vUv;
 float hh(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void main(){
   vec4 tx = texture2D(tDiffuse, vUv); vec3 c = tx.rgb;
@@ -172,17 +203,22 @@ void main(){
   c = max(mix(vec3(l), c, uSat), 0.0);
   c = pow(c, vec3(uContrast)) * pow(0.18, 1.0 - uContrast);
   c = mix(c, vec3(1.08, 0.93, 0.72) * l, uSepia);
+  // tons divididos: sombras frias, luzes quentes (visual de animação)
+  float sl = smoothstep(0.0, 0.6, l);
+  c *= mix(mix(vec3(1.0), uCool * 1.25, uSplit * (1.0 - sl)), mix(vec3(1.0), uWarm * 1.08, uSplit), sl);
   vec2 d = vUv - 0.5; c *= clamp(1.0 - dot(d, d) * uVig * 2.2, 0.0, 1.0);
   c += (hh(vUv * 917.0 + fract(uTime) * 61.0) - 0.5) * uGrain * (0.25 + l);
   gl_FragColor = vec4(c, tx.a);
 }`,
 };
 
+// detail: 1 = modelos completos; < 1 simplifica telhados, copas e capim.
 export const QUALITY = {
-  high: { pr: 2, shadow: 2048, grass: 24000, trees: 2600, seg: 230, bloom: true },
-  medium: { pr: 1.35, shadow: 1024, grass: 12000, trees: 1900, seg: 190, bloom: true },
-  low: { pr: 1, shadow: 0, grass: 4500, trees: 1200, seg: 150, bloom: false },
+  high: { pr: 2, shadow: 2048, shadowR: 46, shadowSoft: 3, grass: 26000, trees: 2300, seg: 240, bloom: true, detail: 1 },
+  medium: { pr: 1.35, shadow: 1536, shadowR: 40, shadowSoft: 2.5, grass: 14000, trees: 1700, seg: 200, bloom: true, detail: 1 },
+  low: { pr: 1, shadow: 0, shadowR: 0, shadowSoft: 0, grass: 5500, trees: 1100, seg: 150, bloom: false, detail: 0.5 },
 };
+export const DETAIL = { value: 1 };
 
 export function detectQuality() {
   try { const saved = localStorage.getItem('cdm-quality'); if (saved && QUALITY[saved]) return saved; } catch (e) { /* sem storage */ }
@@ -192,10 +228,14 @@ export function detectQuality() {
   return 'high';
 }
 
+const _f = new THREE.Vector3(), _q = new THREE.Vector3(), _o = new THREE.Vector3(), _o2 = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
+const _m = new THREE.Matrix4(), _mi = new THREE.Matrix4();
+
 export class Engine {
   constructor(container, quality) {
     this.qName = quality;
     this.q = QUALITY[quality];
+    DETAIL.value = this.q.detail;
     const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.basePR = Math.min(devicePixelRatio || 1, this.q.pr);
     this.prScale = 1;
@@ -221,9 +261,12 @@ export class Engine {
       this.sun.castShadow = true;
       const sc = this.sun.shadow;
       sc.mapSize.set(this.q.shadow, this.q.shadow);
-      Object.assign(sc.camera, { left: -42, right: 42, top: 42, bottom: -42, near: 1, far: 400 });
-      sc.bias = -0.0004;
-      sc.normalBias = 0.05;
+      this.shadowR = this.q.shadowR;
+      Object.assign(sc.camera, { left: -this.shadowR, right: this.shadowR, top: this.shadowR, bottom: -this.shadowR, near: 1, far: 400 });
+      sc.bias = -0.0003;
+      sc.normalBias = 0.06;
+      sc.radius = this.q.shadowSoft;
+      sc.intensity = 0.86;
     }
     s.add(this.hemi, this.sun, this.sun.target);
     s.fog = new THREE.Fog('#ffffff', 40, 500);
@@ -269,10 +312,12 @@ export class Engine {
     this.scene.fog.color.copy(p.fog); this.scene.fog.near = p.near; this.scene.fog.far = p.far;
     fogHP.value.copy(p.fogH);
     this.renderer.toneMappingExposure = p.exposure;
+    rimU.value.copy(p.rim);
     if (this.bloom) {
       this.bloom.strength = p.bloom;
       const g = this.grade.uniforms;
       g.uSat.value = p.sat; g.uContrast.value = p.contrast; g.uSepia.value = p.sepia; g.uVig.value = p.vignette;
+      g.uWarm.value.copy(p.warm); g.uCool.value.copy(p.cool); g.uSplit.value = p.split;
     }
     if (this.water) {
       const w = this.water.uniforms;
@@ -285,8 +330,17 @@ export class Engine {
   render(dt, focus) {
     // Sombra e céu acompanham o ponto de interesse (jogador)
     const sd = this.cur ? this.cur.sunDir : this.sun.position;
-    this.sun.position.copy(focus).addScaledVector(sd, 160);
-    this.sun.target.position.copy(focus);
+    const f = _f.copy(focus);
+    if (this.shadowR) {
+      // encaixa o centro da sombra na grade de texels: sem "tremido" ao andar
+      const texel = (this.shadowR * 2) / this.q.shadow;
+      _m.lookAt(_o.set(0, 0, 0), _o2.copy(sd).negate(), _up);
+      _q.copy(f).applyMatrix4(_mi.copy(_m).transpose());
+      _q.x = Math.round(_q.x / texel) * texel; _q.y = Math.round(_q.y / texel) * texel;
+      f.copy(_q.applyMatrix4(_m));
+    }
+    this.sun.position.copy(f).addScaledVector(sd, 160);
+    this.sun.target.position.copy(f);
     const xr = this.renderer.xr.isPresenting;
     this.sky.position.copy(xr ? this.rig.position : this.camera.position);
     if (xr) { this.renderer.render(this.scene, this.vrCam); return; }
