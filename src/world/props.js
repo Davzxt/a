@@ -132,6 +132,7 @@ export function place(W, obj, x, z, ry = 0, dy = 0) {
   for (const b of obj.userData.boxes || []) W.addBox(wx(b[0], b[1]), wz(b[0], b[1]), b[2], b[3], ry);
   for (const b of obj.userData.circles || []) W.addCollider(wx(b[0], b[1]), wz(b[0], b[1]), b[2]);
   for (const b of obj.userData.surfaces || []) W.addSurface(wx(b[0], b[1]), wz(b[0], b[1]), b[2], b[3], ry, obj.position.y + b[4]);
+  for (const b of obj.userData.noVeg || []) W.addNoVeg(wx(b[0], b[1]), wz(b[0], b[1]), b[2]);
   return obj;
 }
 
@@ -859,6 +860,41 @@ export function station({ name = 'VARGEM ALTA', rails = true, lit = false } = {}
   g.userData.boxes = [[bx, bz, 5.1, 2.6]];
   g.userData.surfaces = [[0, -PD / 2 - 1.5, PL / 2, PD / 2, PH]];
   return bake(g);
+}
+
+// Praça de pedras: anéis de pedras irregulares com rejunte, rosa-dos-ventos no centro e meio-fio.
+export function plaza(R = 14) {
+  const g = new THREE.Group(), r = rng(31), pos = [], cl = [], c = new THREE.Color();
+  const stone = ['#c2b8a6', '#b3a894', '#a89c88', '#cbc2b0', '#9a907e'].map((h) => new THREE.Color(h));
+  const dark = new THREE.Color('#7a6e60'), rose = new THREE.Color('#b0603e');
+  const quad = (a0, a1, r0, r1, col, y = 0.08) => {
+    const P = (a, rr) => [Math.cos(a) * rr, y, Math.sin(a) * rr];
+    const A = P(a0, r0), B = P(a1, r0), C = P(a1, r1), D = P(a0, r1);
+    pos.push(...A, ...B, ...C, ...A, ...C, ...D);
+    for (let k = 0; k < 6; k++) cl.push(col.r, col.g, col.b);
+  };
+  const ringW = DETAIL.value < 1 ? 1.4 : 0.9;
+  for (let r0 = 0.6; r0 < R - 0.4; r0 += ringW) {
+    const r1 = Math.min(r0 + ringW - 0.07, R - 0.35), n = Math.max(6, Math.ceil((Math.PI * 2 * r1) / 1.15)), off = r() * 6.28;
+    for (let j = 0; j < n; j++) {
+      const a0 = off + (j / n) * Math.PI * 2 + 0.035 / r1, a1 = off + ((j + 1) / n) * Math.PI * 2 - 0.035 / r1;
+      const inRose = r0 < 4.2 && Math.cos(((a0 + a1) / 2) * 4) > 0.6;
+      c.copy(inRose ? rose : stone[Math.floor(r() * stone.length)]).multiplyScalar(0.9 + r() * 0.18);
+      quad(a0, a1, r0, r1, c, 0.08 + r() * 0.012);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3));
+  geo.computeVertexNormals();
+  mk(geo, VCM(), 0, 0, 0, g);
+  mk(new THREE.CylinderGeometry(R - 0.3, R - 0.3, 0.4, 48), M('#857a6c'), 0, -0.13, 0, g);
+  mk(new THREE.CylinderGeometry(0.62, 0.62, 0.42, 20), M('#8a7e70'), 0, -0.12, 0, g);
+  const curb = mk(new THREE.TorusGeometry(R - 0.15, 0.17, 5, 64), M('#9a9286'), 0, 0.06, 0, g);
+  curb.rotation.x = Math.PI / 2; curb.scale.set(1, 1, 0.6);
+  g.userData.noVeg = [[0, 0, R + 0.3]];
+  g.userData.ground = 'mean';
+  return bake(g, { ao: false });
 }
 
 // --- ferrovia ---

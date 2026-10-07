@@ -17,6 +17,9 @@ Cada capítulo leva cerca de 3 minutos (jornada completa ≈ 15 min). O mesmo va
 ## Destaques
 
 - Cenários, personagens, música e sons **100% procedurais** (sem arquivos de modelo, textura ou áudio para baixar).
+- Visual **estilizado** (estilo animação): vale plano com morros e pedras de granito ao fundo, copas "fofas", capim com a cor do chão, casas coloniais com telhas capa-e-canal, luz envolvente com recorte e sombras suaves.
+- Personagens com **corpo contínuo (skinning)** que dobra nos ombros, cotovelos, quadril e joelhos, rostos expressivos e cabelos em mechas — uma chamada de desenho por personagem.
+- **Otimizado**: construções e objetos assados numa malha só com cores por vértice, vegetação instanciada em blocos com nível de detalhe por distância, capim só perto da câmera e resolução dinâmica.
 - Iluminação por hora do dia (amanhecer, noite de lua, manhã, entardecer), neblina de vale, água animada, vegetação da Mata Atlântica com vento, ipês floridos, cafezais, bloom e gradação de cor.
 - Mecânicas curtas e variadas: coleta, pesca com lança, furtividade sob a luz dos lampiões, seguir o som do tambor, construir o rancho, **minijogo de ritmo do caxambu**, plantar café, carregar sacas até o trem, entregas na vila.
 - **Acervo Histórico**: cartões com os registros da pesquisa e as fontes (separando fato de ficção).

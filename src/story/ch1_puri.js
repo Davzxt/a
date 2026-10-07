@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { pal } from '../core/engine.js';
 import { particles, makeFlyers, makeCascade } from '../core/fx.js';
 import { buildNature, plants } from '../world/nature.js';
-import { WATER_Y, riverZ } from '../world/terrain.js';
+import { WATER_Y, riverZ, waterPool } from '../world/terrain.js';
 import { place, leafShelter, hammock, campfire, clayPot, basket, bigRock, cutTree, stump, log, mk } from '../world/props.js';
 import { M } from '../core/engine.js';
 import { B, spear, burst } from './kit.js';
@@ -90,6 +90,10 @@ export default {
     const cas = makeCascade(3.2, CH, (k) => reach(CH * (1 - k)) - top + 0.35);
     W.add(cas, RK.x + dx * top, RK.z + dz * top, Math.atan2(dx, dz), 0);
     cas.position.y = gy;
+    const foot = reach(0.2) + 0.6, pool = waterPool(2.6);
+    pool.position.set(RK.x + dx * foot, gy + 0.04, RK.z + dz * foot);
+    W.group.add(pool);
+    for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2; place(W, bigRock(0.5, 0.3, 0.42, '#8a857c'), pool.position.x + Math.cos(a) * 2.6, pool.position.z + Math.sin(a) * 2.6, a, -0.08); }
     W.newFire = place(W, campfire({ lit: false }), n.x, n.z);
     W.addCollider(n.x - 9, n.z + 10, 7);
     // vida: névoa, pássaros, borboletas-azuis

@@ -39,7 +39,7 @@ function lumpy(g, amt) {
 const merge = (list) => { const g = mergeGeometries(list.map(flat)); g.userData.shared = true; return g; };
 
 // Copa estilizada: bolhas facetadas com normais "esféricas" (luz macia como algodão) e AO interno.
-function canopy(blobs, det, lo, hi, seed = 1, hl = '#d8e070') {
+function canopy(blobs, det, lo, hi, seed = 1, hl = '#d8e070', aoMin = 0.62) {
   const parts = [], r = rng(seed);
   let cx = 0, cy = 0, cz = 0, wsum = 0;
   for (const [rad, x, y, z] of blobs) { cx += x * rad; cy += y * rad; cz += z * rad; wsum += rad; }
@@ -65,7 +65,7 @@ function canopy(blobs, det, lo, hi, seed = 1, hl = '#d8e070') {
       const t = smooth(ymin, ymax, py), occ = smooth(0.15, 0.95, Math.hypot(px - cx, (py - cy) * 1.2, pz - cz) / reach);
       _t.copy(L).lerp(Hc, Math.pow(t, 0.85) * 0.75 + occ * 0.25);
       _t.lerp(HL, smooth(0.55, 0.95, _v.y) * smooth(0.5, 1, t) * 0.32);
-      _t.multiplyScalar(tone * (0.62 + 0.38 * occ) * (0.94 + hash(px, py, pz) * 0.12));
+      _t.multiplyScalar(tone * (aoMin + (1 - aoMin) * occ) * (0.94 + hash(px, py, pz) * 0.12));
       c[i * 3] = _t.r; c[i * 3 + 1] = _t.g; c[i * 3 + 2] = _t.b;
     }
     g.setAttribute('normal', new THREE.BufferAttribute(n, 3));
@@ -135,8 +135,9 @@ function buildSet(hi) {
   const tbl = [[2.9, 0, 7.5, 0], [2.3, 1.6, 6.9, 0.6], [2.3, -1.5, 7.0, -0.6]];
   const wood = () => [trunk(7, 0.4, 0.2, 0.35, hi ? 7 : 5), ...(hi ? [branch(2.6, 0.13, -0.9, 0, 0.1, 5.0, 0), branch(2.4, 0.12, 0.85, 0.3, 0, 5.2, 0)] : [])];
   S.tree = merge([...wood(), canopy(hi ? tb : tbl, det, '#24461f', '#7aa83e', 3, '#d6e66a')]);
-  S.ipe = merge([...wood(), canopy(hi ? tb : tbl, det, '#c2801a', '#ffd84a', 5, '#fff2a0')]);
-  S.ipeRosa = merge([...wood(), canopy(hi ? tb : tbl, det, '#a04a78', '#f6a8cc', 7, '#ffe0f0')]);
+  // ipês: flores claras também por baixo (vistos de perto na tela-título)
+  S.ipe = merge([...wood(), canopy(hi ? tb : tbl, det, '#e09a1c', '#ffe050', 5, '#fff4a8', 0.82)]);
+  S.ipeRosa = merge([...wood(), canopy(hi ? tb : tbl, det, '#c05a8c', '#f8b0d0', 7, '#ffe4f2', 0.82)]);
   // Emergente (jequitibá): copa em guarda-chuva
   const ub = [[3.4, 0, 13, 0, 0.6], [2.7, 2.7, 12.4, 0.8, 0.6], [2.6, -2.5, 12.6, -0.6, 0.6], [2.4, 0.4, 13.8, 2, 0.6], [2.3, -0.6, 12.3, -2.6, 0.6]];
   S.tall = merge([trunk(12.5, 0.6, 0.28, 0.6, hi ? 8 : 5, '#4d3a2a', '#8a6e52'), ...(hi ? [branch(3.4, 0.18, -1.0, 0.4, 0, 10, 0), branch(3.2, 0.17, 1.0, -0.3, 0, 10.4, 0)] : []),

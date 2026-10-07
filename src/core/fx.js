@@ -201,7 +201,7 @@ float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }
 void main(){ float s = vn(vec2(vUv.x * 14.0, vUv.y * 3.0 + uTime * 2.6)) * 0.6 + vn(vec2(vUv.x * 30.0, vUv.y * 6.0 + uTime * 4.0)) * 0.4;
   vec3 c = mix(vec3(0.35, 0.6, 0.68), vec3(1.25), smoothstep(0.35, 0.8, s));
-  float a = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x) * (0.75 + 0.25 * s);
+  float a = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x) * (0.75 + 0.25 * s) * smoothstep(1.0, 0.86, vUv.y + (vn(vec2(vUv.x * 9.0, 1.0)) - 0.5) * 0.08);
   gl_FragColor = vec4(c, a);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>

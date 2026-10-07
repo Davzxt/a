@@ -4,7 +4,7 @@ import { pal, M } from '../core/engine.js';
 import { particles } from '../core/fx.js';
 import { buildNature, coffeeRows } from '../world/nature.js';
 import { riverZ, alongRiver } from '../world/terrain.js';
-import { place, station, townHouse, church, marco, bench, streetLamp, cyl, Path } from '../world/props.js';
+import { place, station, townHouse, church, marco, bench, streetLamp, plaza, Path } from '../world/props.js';
 import { Character } from '../world/character.js';
 import { LOOKS } from './data.js';
 import { B, spear } from './kit.js';
@@ -30,12 +30,7 @@ export default {
   build(G, W) {
     buildNature(W, { trees: 0.9, grass: 0.7, coffee: coffeeRows(12, riverZ(12) - 66, 6, 14, 0.05) });
     const p = W.at(PZ.x, PZ.z);
-    const pv = cyl(null, 14, 14, 0.08, '#b9b0a0', 0, 0, 0, 40);
-    pv.position.copy(p);
-    W.group.add(pv);
-    const inner = cyl(null, 6, 6, 0.1, '#a3927c', 0, 0, 0, 32);
-    inner.position.copy(p);
-    W.group.add(inner);
+    place(W, plaza(14), p.x, p.z);
     W.marco = place(W, marco(['VARGEM ALTA', 'Lei nº 4.063 · 6/5/1988']), p.x, p.z, Math.PI);
     for (let i = 0; i < 4; i++) {
       const a = (i / 4) * Math.PI * 2 + Math.PI / 4;

@@ -47,8 +47,9 @@ export default {
     W.group.add(fill, fill.target);
     const m = C.clone().addScaledVector(f, -1.2).addScaledVector(r, 4);
     place(W, marco(['VARGEM ALTA', 'Espírito Santo']), m.x, m.z, yaw - 0.5);
-    const t = C.clone().addScaledVector(f, -3).addScaledVector(r, -7.5);
-    plants(W, 'ipe', [{ x: t.x, z: t.z, s: 1.35 }]);
+    // ipê-amarelo atrás de Inácio, como na arte de referência
+    const t = C.clone().addScaledVector(f, -7).addScaledVector(r, -6.4);
+    plants(W, 'ipe', [{ x: t.x, z: t.z, s: 0.8 }]);
     const petals = particles({ count: 90, mode: 2, spread: [10, 6, 10], color: '#ffd23a', size: 0.09, opacity: 0.9, additive: false });
     petals.position.set(t.x, W.groundAt(t.x, t.z) + 5, t.z);
     W.group.add(petals);

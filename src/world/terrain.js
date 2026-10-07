@@ -80,6 +80,13 @@ void main(){
 });
 WATER_MAT.uniforms.uTime = timeU;
 WATER_MAT.uniforms.fogHP = fogHP;
+// Poça/lagoa com a mesma água do rio (base da cachoeira).
+export function waterPool(r = 3) {
+  const g = new THREE.CircleGeometry(r, 28).rotateX(-Math.PI / 2);
+  const m = new THREE.Mesh(g, WATER_MAT);
+  m.renderOrder = 2;
+  return m;
+}
 let WATER_MESH = null;
 function waterMesh() {
   if (WATER_MESH) return WATER_MESH;
@@ -367,6 +374,7 @@ export class World {
       const dx = x - s.x, dz = z - s.z, lx = dx * s.c - dz * s.s, lz = dx * s.s + dz * s.c;
       if (Math.abs(lx) < s.hx + pad && Math.abs(lz) < s.hz + pad) return true;
     }
+    for (const c of this.noVeg || []) if ((x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + pad) ** 2) return true;
     if (!this._bigC) this._bigC = this.colliders.filter((c) => c.r > 0.75);
     for (const c of this._bigC) if ((x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + pad) ** 2) return true;
     return false;
@@ -387,6 +395,7 @@ export class World {
   }
   anim(obj) { if (obj.userData.update) this.updates.push(obj.userData.update); return obj; }
   addCollider(x, z, r) { this.colliders.push({ x, z, r }); this._bigC = null; }
+  addNoVeg(x, z, r) { (this.noVeg || (this.noVeg = [])).push({ x, z, r }); }
   addBox(x, z, hx, hz, ang = 0) { this.boxes.push({ x, z, hx, hz, c: Math.cos(ang), s: Math.sin(ang) }); }
   addSurface(x, z, hx, hz, ang, y) { this.surfaces.push({ x, z, hx, hz, y, c: Math.cos(ang), s: Math.sin(ang) }); }
 
